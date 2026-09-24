@@ -54,9 +54,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit version bump and create tag
+        env:
+          # 个人仓库 ruleset 无法给 GitHub Actions 应用开绕过，
+          # 使用仓库所有者的 PAT（admin 角色在绕过名单中）推送版本提交
+          RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${RELEASE_PAT}@github.com/IVEN-CN/iven-infra.git"
           git add "**/pom.xml" "pom.xml"
           git commit -m "chore: release v${{ inputs.version }}" || echo "版本未变化，跳过提交"
           git tag "v${{ inputs.version }}"
