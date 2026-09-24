@@ -77,7 +77,7 @@ jobs:
         run: |
           gh release create "v${{ inputs.version }}" \
             --title "v${{ inputs.version }}" \
-            --generate-release-notes \
+            --generate-notes \
             */target/*.jar
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
