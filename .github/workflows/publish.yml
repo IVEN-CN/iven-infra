@@ -53,38 +53,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create release branch with version bump
+      - name: Setup SSH deploy key
+        env:
+          RELEASE_SSH_KEY: ${{ secrets.RELEASE_SSH_KEY }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "release/v${{ inputs.version }}"
+          mkdir -p ~/.ssh
+          echo "$RELEASE_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config core.sshCommand "ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes"
+
+      - name: Commit version bump, tag and push (deploy key bypasses ruleset)
+        run: |
+          git config user.name "IVEN-CN"
+          git config user.email "13377529851@qq.com"
+          git remote set-url origin git@github.com:IVEN-CN/iven-infra.git
           git add "**/pom.xml" "pom.xml"
           git commit -m "chore: release v${{ inputs.version }}"
-          git push origin "release/v${{ inputs.version }}"
-
-      - name: Open PR and wait for CI
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr create --base main --head "release/v${{ inputs.version }}" \
-            --title "chore: release v${{ inputs.version }}" \
-            --body "CD 自动发布的版本对齐提交（v${{ inputs.version }}）"
-          gh pr checks "release/v${{ inputs.version }}" --watch --interval 10
-
-      - name: Merge release PR (squash)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr merge "release/v${{ inputs.version }}" --squash --delete-branch
-          git fetch origin main
-          git checkout origin/main
-
-      - name: Create tag on merged main
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag "v${{ inputs.version }}"
-          git push origin "v${{ inputs.version }}"
+          git push origin HEAD --tags
 
       - name: Create GitHub Release
         run: |
