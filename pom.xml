@@ -11,7 +11,7 @@
 
     <groupId>io.github.iven-cn</groupId>
     <artifactId>iven-infra</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
     <packaging>pom</packaging>
     <name>iven_infra</name>
     <description>IVEN-CN personal infrastructure framework starters</description>
