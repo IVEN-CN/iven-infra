@@ -20,6 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Ensure mvnw is executable
+        run: chmod +x mvnw
+
       - name: Validate version format
         run: |
           VERSION="${{ inputs.version }}"
