@@ -91,9 +91,9 @@ public class StorageInfraAutoConfiguration {
 
     /**
      * 应用启动时初始化对象存储 bucket，避免业务首次写入时才发现 bucket 不存在。
+     * 通过方法参数隐式要求 ObjectStorage bean 存在，storage 关闭时自动退避。
      */
     @Bean
-    @ConditionalOnMissingBean
     public CommandLineRunner initializeObjectStorage(ObjectStorage objectStorage) {
         return args -> {
             log.info("Initializing object storage, provider={}", objectStorage.providerName());
