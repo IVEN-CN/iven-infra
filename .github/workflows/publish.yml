@@ -53,19 +53,38 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit version bump and create tag
-        env:
-          # 个人仓库 ruleset 无法给 GitHub Actions 应用开绕过，
-          # 使用仓库所有者的 PAT（admin 角色在绕过名单中）推送版本提交
-          RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
+      - name: Create release branch with version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${RELEASE_PAT}@github.com/IVEN-CN/iven-infra.git"
+          git checkout -b "release/v${{ inputs.version }}"
           git add "**/pom.xml" "pom.xml"
-          git commit -m "chore: release v${{ inputs.version }}" || echo "版本未变化，跳过提交"
+          git commit -m "chore: release v${{ inputs.version }}"
+          git push origin "release/v${{ inputs.version }}"
+
+      - name: Open PR and wait for CI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create --base main --head "release/v${{ inputs.version }}" \
+            --title "chore: release v${{ inputs.version }}" \
+            --body "CD 自动发布的版本对齐提交（v${{ inputs.version }}）"
+          gh pr checks "release/v${{ inputs.version }}" --watch --interval 10
+
+      - name: Merge release PR (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "release/v${{ inputs.version }}" --squash --delete-branch
+          git fetch origin main
+          git checkout origin/main
+
+      - name: Create tag on merged main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag "v${{ inputs.version }}"
-          git push origin HEAD --tags
+          git push origin "v${{ inputs.version }}"
 
       - name: Create GitHub Release
         run: |
