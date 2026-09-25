@@ -11,6 +11,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.format.FormatterRegistry;
@@ -28,8 +29,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnProperty(name = "iven.web.enabled", havingValue = "true", matchIfMissing = true)
+@EnableConfigurationProperties(WebInfraProperties.class)
 @Import({ResponseAdvice.class, GlobalExceptionHandler.class})
 public class WebInfraAutoConfiguration {
+
+    private final WebInfraProperties webInfraProperties;
+
+    public WebInfraAutoConfiguration(WebInfraProperties webInfraProperties) {
+        this.webInfraProperties = webInfraProperties;
+    }
 
     @PostConstruct
     void printBanner() {
@@ -53,7 +61,13 @@ public class WebInfraAutoConfiguration {
         return new WebMvcConfigurer() {
             @Override
             public void addInterceptors(@NonNull InterceptorRegistry registry) {
-                registry.addInterceptor(new RequestLoggingInterceptor());
+                if (!webInfraProperties.getLogging().isEnabled()) {
+                    return;
+                }
+                registry.addInterceptor(new RequestLoggingInterceptor())
+                        .addPathPatterns("/**")
+                        .excludePathPatterns(
+                                webInfraProperties.getLogging().getExcludePaths().toArray(new String[0]));
             }
 
             @Override
