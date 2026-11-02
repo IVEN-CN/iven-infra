@@ -43,7 +43,7 @@
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <guava.version>32.0.0-jre</guava.version>
+        <guava.version>33.7.1-jre</guava.version>
         <jjwt.version>0.12.5</jjwt.version>
         <mybatis-plus.version>3.5.7</mybatis-plus.version>
         <minio.version>8.5.4</minio.version>
